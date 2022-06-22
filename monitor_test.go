@@ -5,39 +5,39 @@ import (
 	"testing"
 )
 
-type monitorS struct {
+type data struct {
 	s string
 	i int
 }
 
 func TestNew(t *testing.T) {
 	type args struct {
-		s   *monitorS
+		s   *data
 		key string
-		fn  []MsgFn[*monitorS]
+		fn  []MsgFn[*data]
 	}
 
 	tests := []struct {
 		name string
 		args args
-		want *monitorS
+		want *data
 	}{
 		// TODO: Add test cases.
 		{
 			name: "",
 			args: args{
-				s: &monitorS{
+				s: &data{
 					s: "111",
 					i: 1,
 				},
 				key: "str111",
-				fn: []MsgFn[*monitorS]{
-					func(key string, val *monitorS) {
+				fn: []MsgFn[*data]{
+					func(key string, val *data) {
 						fmt.Println("called", key, val.s)
 					},
 				},
 			},
-			want: &monitorS{
+			want: &data{
 				s: "111",
 				i: 1,
 			},
@@ -45,24 +45,24 @@ func TestNew(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				s: &monitorS{
+				s: &data{
 					s: "222",
 					i: 2,
 				},
 				key: "str222",
-				fn: []MsgFn[*monitorS]{
-					func(key string, val *monitorS) {
+				fn: []MsgFn[*data]{
+					func(key string, val *data) {
 						fmt.Println("called", key, val.s)
 					},
 				},
 			},
-			want: &monitorS{
+			want: &data{
 				s: "222",
 				i: 2,
 			},
 		},
 	}
-	m := New[*monitorS](1024)
+	m := New[*data](1024)
 
 	for _, tt := range tests {
 		for i := range tt.args.fn {

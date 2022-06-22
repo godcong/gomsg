@@ -7,32 +7,34 @@ import (
 	ants "github.com/panjf2000/ants/v2"
 )
 
-type MsgFn = func(key string, val interface{})
+type T any
 
-type monitors struct {
+type MsgFn[T any] func(key string, val T)
+
+type monitors[T any] struct {
 	size int
-	msg  cmap.ConcurrentMap[[]MsgFn]
+	msg  cmap.ConcurrentMap[[]MsgFn[T]]
 	pool *ants.Pool
 }
 
-type Monitor interface {
-	WaitFor(key string, fn MsgFn)
-	Send(key string, data interface{})
+type Monitor[T any] interface {
+	WaitFor(key string, fn MsgFn[T])
+	Send(key string, data T)
 }
 
-func New(size int) *monitors {
+func New[T any](size int) Monitor[T] {
 	pool, _ := ants.NewPool(size)
 	cmap.SHARD_COUNT = size
-	m := monitors{
+	m := monitors[T]{
 		size: size,
-		msg:  cmap.New[[]MsgFn](),
+		msg:  cmap.New[[]MsgFn[T]](),
 		pool: pool,
 	}
 	return &m
 }
 
-func (m *monitors) WaitFor(key string, fn MsgFn) {
-	s := []MsgFn{fn}
+func (m *monitors[T]) WaitFor(key string, fn MsgFn[T]) {
+	s := []MsgFn[T]{fn}
 	v, exist := m.msg.Get(key)
 	if exist {
 		v = append(s, v...)
@@ -40,7 +42,7 @@ func (m *monitors) WaitFor(key string, fn MsgFn) {
 	m.msg.Set(key, s)
 }
 
-func (m *monitors) Send(key string, data interface{}) {
+func (m *monitors[T]) Send(key string, data T) {
 	v, exist := m.msg.Get(key)
 	if !exist {
 		return
@@ -56,7 +58,7 @@ func (m *monitors) Send(key string, data interface{}) {
 	wg.Wait()
 }
 
-func (m *monitors) AsyncSend(key string, data interface{}) {
+func (m *monitors[T]) AsyncSend(key string, data T) {
 	v, exist := m.msg.Get(key)
 	if !exist {
 		return

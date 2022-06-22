@@ -34,12 +34,12 @@ func New[T any](size int) Monitor[T] {
 }
 
 func (m *monitors[T]) WaitFor(key string, fn MsgFn[T]) {
-	s := []MsgFn[T]{fn}
-	v, exist := m.msg.Get(key)
-	if exist {
-		v = append(s, v...)
-	}
-	m.msg.Set(key, s)
+	m.msg.Upsert(key, []MsgFn[T]{fn}, func(exist bool, v, nv []MsgFn[T]) []MsgFn[T] {
+		if exist {
+			v = append(v, nv...)
+		}
+		return nv
+	})
 }
 
 func (m *monitors[T]) Send(key string, data T) {

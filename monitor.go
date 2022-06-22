@@ -1,6 +1,8 @@
 package gomsg
 
 import (
+	"sync"
+
 	cmap "github.com/orcaman/concurrent-map/v2"
 	ants "github.com/panjf2000/ants/v2"
 )
@@ -39,6 +41,22 @@ func (m *monitors) WaitFor(key string, fn MsgFn) {
 }
 
 func (m *monitors) Send(key string, data interface{}) {
+	v, exist := m.msg.Get(key)
+	if !exist {
+		return
+	}
+	wg := sync.WaitGroup{}
+	for i := range v {
+		wg.Add(1)
+		_ = m.pool.Submit(func() {
+			defer wg.Done()
+			v[i](key, data)
+		})
+	}
+	wg.Wait()
+}
+
+func (m *monitors) AsyncSend(key string, data interface{}) {
 	v, exist := m.msg.Get(key)
 	if !exist {
 		return

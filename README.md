@@ -32,8 +32,8 @@ m.WaitFor("test", func(key string, val *data) {
     fmt.Println("called", key, val.s, val.i)
 })
 data := &data{
-s: "str",
-i: 1,
+    s: "str",
+    i: 1,
 }
 m.Send("test",data)
 ```
